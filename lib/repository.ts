@@ -5,14 +5,13 @@ export type ProgramRow = {
   id: number
   name: string
   version: string | null
-  category: string | null
+  category: string[] | null  // Changed to string array
   cpu_min: number
   cpu_rec: number | null
   gpu_min: number
   gpu_rec: number | null
   ram_min_gb: number
   ram_rec_gb: number | null
-  notes: string | null
 }
 
 export type FeatureRow = { id: number; name: string }
@@ -53,16 +52,100 @@ export type GpuScoreRow = { id: number; score_robust: number | null }
 
 export async function getCategories(): Promise<CategoryRow[]> {
   const { data, error } = await supabase.from('categories').select('id, fa_name, name, icon, desc').order('id')
-  if (error) throw error
+  if (error) {
+    console.error('❌ Error fetching categories:', error);
+    throw error;
+  }
+  console.log('📂 Categories fetched:', data);
+  return data || []
+}
+
+export async function debugDatabase(): Promise<void> {
+  console.log('🔍 Debugging database...');
+  
+  try {
+    // Check categories
+    const { data: categories, error: catError } = await supabase.from('categories').select('*')
+    console.log('📂 Categories:', categories);
+    console.log('📂 Categories error:', catError);
+    
+    // Check programs
+    const { data: programs, error: progError } = await supabase.from('programs').select('*')
+    console.log('📱 Programs:', programs);
+    console.log('📱 Programs error:', progError);
+    
+    // Check if programs table exists and has data
+    if (programs && programs.length > 0) {
+      console.log('✅ Programs table has data');
+      console.log('📋 Sample program:', programs[0]);
+      console.log('📋 All categories in programs:', Array.from(new Set(programs.flatMap(p => p.category || []))));
+    } else {
+      console.log('⚠️ Programs table is empty or has no data');
+    }
+    
+    // Check if categories match
+    if (categories && programs) {
+      const categoryNames = categories.map(c => c.name).filter(Boolean);
+      const programCategories = programs.flatMap(p => p.category || []).filter(Boolean);
+      
+      console.log('🔗 Category names in categories table:', categoryNames);
+      console.log('🔗 Category values in programs table:', programCategories);
+      
+      const matchingCategories = categoryNames.filter(cat => programCategories.includes(cat));
+      console.log('✅ Matching categories:', matchingCategories);
+      
+      const missingCategories = categoryNames.filter(cat => !programCategories.includes(cat));
+      console.log('❌ Missing categories in programs:', missingCategories);
+    }
+    
+  } catch (error) {
+    console.error('❌ Debug error:', error);
+  }
+}
+
+export async function getAllPrograms(): Promise<ProgramRow[]> {
+  const { data, error } = await supabase.from('programs').select('*')
+  if (error) {
+    console.error('❌ Error fetching all programs:', error);
+    throw error;
+  }
+  console.log('📋 All programs fetched:', data);
   return data || []
 }
 
 export async function getProgramsByCategory(category: string | null): Promise<ProgramRow[]> {
-  let query = supabase.from('programs_latest').select('*')
-  if (category) query = query.eq('category', category)
-  const { data, error } = await query
-  if (error) throw error
-  return data || []
+  console.log('🔍 Searching for programs with category:', category);
+  
+  // First, let's see all programs and their categories
+  const { data: allPrograms, error: allError } = await supabase.from('programs').select('id, name, category')
+  if (allError) {
+    console.error('❌ Error fetching all programs:', allError);
+    throw allError;
+  }
+  console.log('📋 All programs in database:', allPrograms);
+  
+  // Now search for specific category
+  if (!category) {
+    return [];
+  }
+  
+  // Use textSearch for array fields or filter manually
+  const { data, error } = await supabase.from('programs').select('*')
+  if (error) {
+    console.error('❌ Error fetching all programs:', error);
+    throw error;
+  }
+  
+  // Filter programs manually based on category
+  const filteredPrograms = data?.filter(program => {
+    if (!program.category || !Array.isArray(program.category)) {
+      return false;
+    }
+    return program.category.includes(category);
+  }) || [];
+  
+  console.log('✅ Found programs for category:', category, ':', filteredPrograms);
+  return filteredPrograms;
 }
 
 export async function getFeatures(): Promise<FeatureRow[]> {

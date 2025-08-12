@@ -13,12 +13,15 @@ import SummaryBar from '@/components/SummaryBar';
 import { 
   getCategories, 
   getProgramsByCategory, 
+  getAllPrograms,
+  debugDatabase,
   getFeatures, 
   getPorts, 
   getLaptopsFull, 
   getLaptopComponentScores, 
   getLaptopMinPrices 
 } from '@/lib/repository';
+import { supabase } from '@/lib/supabaseClient';
 import { priceRanges } from '@/lib/staticData';
 
 export default function Home() {
@@ -34,16 +37,32 @@ export default function Home() {
   const [ports, setPorts] = useState<NamedItem[]>([])
   const [laptopResults, setLaptopResults] = useState<LaptopResultItem[]>([])
 
+  // Category mapping function
+  const getCategoryDisplayName = (categoryName: string): string => {
+    const categoryMap: Record<string, string> = {
+      'Design': 'Design',
+      'video_editing': 'Video Editing',
+      'engineering': 'Engineering',
+      'graphics': 'Graphics',
+      'programming': 'Programming',
+      'music_production': 'Music Production'
+    };
+    return categoryMap[categoryName] || categoryName;
+  };
+
   useEffect(() => {
     (async () => {
       setLoading(true)
       try {
+        // Debug database first
+        await debugDatabase();
+        
         const [cats, feats, prts] = await Promise.all([
           getCategories(),
           getFeatures(),
           getPorts(),
         ])
-        setCategories(cats.map(c => ({ id: String(c.id), name: c.fa_name || c.name || '', icon: c.icon || undefined, desc: c.desc || undefined })))
+        setCategories(cats.map(c => ({ id: String(c.id), name: c.name || '', fa_name: c.fa_name || c.name || '', icon: c.icon || undefined, desc: c.desc || undefined })))
         setFeatures(feats.map(f => ({ id: String(f.id), name: f.name })))
         setPorts(prts.map(p => ({ id: String(p.id), name: p.name })))
       } finally {
@@ -54,9 +73,38 @@ export default function Home() {
 
   useEffect(() => {
     (async () => {
-      const cat = categories.find(c => c.id === selections[1])?.name || null
-      const rows = await getProgramsByCategory(cat)
-      setPrograms(rows.map(r => ({ id: String(r.id), name: r.name, desc: r.notes ?? undefined })))
+      const selectedCategory = categories.find(c => c.id === selections[1]);
+      const cat = selectedCategory?.name || null;
+      console.log('🎯 Selected category ID:', selections[1]);
+      console.log('🎯 Selected category object:', selectedCategory);
+      console.log('🎯 Selected category name:', cat);
+      console.log('🎯 All categories:', categories);
+      
+      // Debug: Check if programs table has any data
+      try {
+        const allPrograms = await getAllPrograms()
+        console.log('📋 All programs in database:', allPrograms);
+        console.log('📋 Programs count:', allPrograms.length);
+        
+        if (allPrograms.length === 0) {
+          console.log('⚠️ No programs found in database!');
+        } else {
+          console.log('📋 Sample program:', allPrograms[0]);
+          console.log('📋 All program categories:', allPrograms.map(p => p.category));
+        }
+      } catch (error) {
+        console.error('❌ Error fetching all programs:', error);
+      }
+      
+      // Only fetch programs if a category is selected
+      if (!cat) {
+        console.log('⚠️ No category selected, clearing programs');
+        setPrograms([]);
+      } else {
+        const rows = await getProgramsByCategory(cat)
+        console.log('📱 Programs found for category:', cat, ':', rows);
+        setPrograms(rows.map(r => ({ id: String(r.id), name: r.name, desc: `${r.version ? `نسخه: ${r.version}` : ''} - حداقل CPU: ${r.cpu_min} - حداقل GPU: ${r.gpu_min} - حداقل RAM: ${r.ram_min_gb}GB` })))
+      }
     })()
   }, [selections[1], categories])
 
@@ -117,7 +165,10 @@ export default function Home() {
       if (subKey) setSelections((prev: any) => ({ ...prev, [step]: { ...prev[step], [subKey]: currentSelection } })); else setSelections((prev: any) => ({ ...prev, [step]: currentSelection }));
     } else {
       setSelections((prev: any) => ({ ...prev, [step]: id }));
-      if (step === 1) setSelections((prev: any) => ({ ...prev, 2: [] }));
+      if (step === 1) {
+        setSelections((prev: any) => ({ ...prev, 2: [] }));
+        // Don't clear programs here - let useEffect handle it
+      }
     }
   };
 

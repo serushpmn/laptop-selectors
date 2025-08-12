@@ -2,7 +2,8 @@ import React from 'react';
 
 export interface CategoryItem {
   id: string;
-  name: string;
+  name: string; // Original name from DB
+  fa_name: string; // Persian name for display
   icon?: string;
   desc?: any;
 }
