@@ -137,28 +137,59 @@ export async function getProgramsByCategory(category: string | null): Promise<Pr
   }
   
   // Filter programs manually based on category (support both string and array)
-  const filteredPrograms = data?.filter(program => {
+  let filteredPrograms = data?.filter(program => {
     if (!program.category) return false;
     if (Array.isArray(program.category)) {
       return program.category.includes(category);
     } else if (typeof program.category === 'string') {
-      // Support comma separated or single string
       try {
-        // Try to parse as JSON array
         const arr = JSON.parse(program.category);
         if (Array.isArray(arr)) {
           return arr.includes(category);
         }
       } catch {
-        // Not a JSON array, treat as single value
         return program.category === category;
       }
     }
     return false;
   }) || [];
-  
-  console.log('✅ Found programs for category:', category, ':', filteredPrograms);
+
+  // فقط جدیدترین ورژن هر برنامه را نگه دار
+  // فرض: version عددی یا رشته قابل مقایسه است
+  const latestByName: Record<string, ProgramRow> = {};
+  filteredPrograms.forEach(p => {
+    const name = p.name;
+    if (!latestByName[name]) {
+      latestByName[name] = p;
+    } else {
+      // مقایسه ورژن فعلی با قبلی
+      const prevVersion = latestByName[name].version;
+      const currVersion = p.version;
+      // اگر ورژن جدیدتر است جایگزین کن
+      if (compareVersion(currVersion, prevVersion) > 0) {
+        latestByName[name] = p;
+      }
+    }
+  });
+  filteredPrograms = Object.values(latestByName);
+
+  console.log('✅ Found programs for category (latest only):', category, ':', filteredPrograms);
   return filteredPrograms;
+}
+
+// مقایسه ورژن به صورت عددی یا رشته‌ای
+function compareVersion(a: string | null, b: string | null): number {
+  if (!a && !b) return 0;
+  if (!a) return -1;
+  if (!b) return 1;
+  // اگر هر دو عددی باشند
+  const aNum = parseFloat(a);
+  const bNum = parseFloat(b);
+  if (!isNaN(aNum) && !isNaN(bNum)) {
+    return aNum - bNum;
+  }
+  // مقایسه رشته‌ای
+  return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 }
 
 export async function getFeatures(): Promise<FeatureRow[]> {
