@@ -1,0 +1,59 @@
+### Dependencies
+node_modules/
+.pnpm-store/
+
+### Next.js build output
+.next/
+.next/cache/
+.next/types/
+out/
+dist/
+
+### Logs
+logs
+*.log
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+### Environment files
+.env
+.env.*
+.env.local
+.env*.local
+!.env.example
+
+### OS files
+.DS_Store
+Thumbs.db
+
+### Editor/IDE
+.vscode/
+.idea/
+*.swp
+
+### Testing/Coverage
+coverage/
+
+### Cache & misc
+.eslintcache
+*.tsbuildinfo
+.vercel/
+tmp/
+temp/
+
+### Allowlist: only keep root files and specific folders
+/*
+!/.gitignore
+!/*.*
+!/LICENSE
+!/app/**
+!/components/**
+!/lib/**
+
+# Ensure env files still ignored at root
+.env
+.env.*
+.env.local
