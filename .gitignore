@@ -49,8 +49,12 @@ temp/
 !/.gitignore
 !/*.*
 !/LICENSE
+# Re-include these directories themselves, then all contents
+!/app
 !/app/**
+!/components
 !/components/**
+!/lib
 !/lib/**
 
 # Ensure env files still ignored at root
