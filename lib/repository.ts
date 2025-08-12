@@ -136,12 +136,25 @@ export async function getProgramsByCategory(category: string | null): Promise<Pr
     throw error;
   }
   
-  // Filter programs manually based on category
+  // Filter programs manually based on category (support both string and array)
   const filteredPrograms = data?.filter(program => {
-    if (!program.category || !Array.isArray(program.category)) {
-      return false;
+    if (!program.category) return false;
+    if (Array.isArray(program.category)) {
+      return program.category.includes(category);
+    } else if (typeof program.category === 'string') {
+      // Support comma separated or single string
+      try {
+        // Try to parse as JSON array
+        const arr = JSON.parse(program.category);
+        if (Array.isArray(arr)) {
+          return arr.includes(category);
+        }
+      } catch {
+        // Not a JSON array, treat as single value
+        return program.category === category;
+      }
     }
-    return program.category.includes(category);
+    return false;
   }) || [];
   
   console.log('✅ Found programs for category:', category, ':', filteredPrograms);
