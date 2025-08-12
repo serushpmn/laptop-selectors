@@ -43,7 +43,7 @@ export default function Home() {
           getFeatures(),
           getPorts(),
         ])
-        setCategories(cats.map(c => ({ id: String(c.id), name: c.name })))
+        setCategories(cats.map(c => ({ id: String(c.id), name: c.fa_name || c.name || '', icon: c.icon || undefined, desc: c.desc || undefined })))
         setFeatures(feats.map(f => ({ id: String(f.id), name: f.name })))
         setPorts(prts.map(p => ({ id: String(p.id), name: p.name })))
       } finally {

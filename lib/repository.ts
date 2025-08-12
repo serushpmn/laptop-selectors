@@ -1,6 +1,6 @@
 import { supabase } from './supabaseClient'
 
-export type CategoryRow = { id: number; name: string }
+export type CategoryRow = { id: number; name?: string; fa_name?: string; icon?: string | null; desc?: any }
 export type ProgramRow = {
   id: number
   name: string
@@ -52,7 +52,7 @@ export type CpuScoreRow = { id: number; score_robust: number | null }
 export type GpuScoreRow = { id: number; score_robust: number | null }
 
 export async function getCategories(): Promise<CategoryRow[]> {
-  const { data, error } = await supabase.from('categories').select('id, name').order('id')
+  const { data, error } = await supabase.from('categories').select('id, fa_name, name, icon, desc').order('id')
   if (error) throw error
   return data || []
 }
