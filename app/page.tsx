@@ -196,20 +196,38 @@ export default function Home() {
     subKey?: string
   ) => {
     if (type === "checkbox") {
-      // Handle checkbox selection for steps like categories (1) and software (2)
-      const currentSelections = selections[step] || [];
-      const newSelections = currentSelections.includes(id)
-        ? currentSelections.filter((itemId: string) => itemId !== id)
-        : [...currentSelections, id];
+      if (step === 3 && subKey) {
+        // Special handling for features/ports selection
+        setSelections((prev: any) => {
+          const prevStep = prev[3] || { features: [], ports: [] };
+          const arr = prevStep[subKey] || [];
+          const newArr = arr.includes(id)
+            ? arr.filter((itemId: string) => itemId !== id)
+            : [...arr, id];
+          return {
+            ...prev,
+            3: {
+              ...prevStep,
+              [subKey]: newArr,
+            },
+          };
+        });
+      } else {
+        // Handle checkbox selection for steps like categories (1) and software (2)
+        const currentSelections = selections[step] || [];
+        const newSelections = currentSelections.includes(id)
+          ? currentSelections.filter((itemId: string) => itemId !== id)
+          : [...currentSelections, id];
 
-      setSelections((prev: any) => {
-        const updated = { ...prev, [step]: newSelections };
-        // If categories (step 1) are changed, reset selected programs (step 2)
-        if (step === 1) {
-          updated[2] = [];
-        }
-        return updated;
-      });
+        setSelections((prev: any) => {
+          const updated = { ...prev, [step]: newSelections };
+          // If categories (step 1) are changed, reset selected programs (step 2)
+          if (step === 1) {
+            updated[2] = [];
+          }
+          return updated;
+        });
+      }
     } else {
       // Handle radio button selection (for other steps like prices)
       setSelections((prev: any) => ({ ...prev, [step]: id }));
@@ -256,7 +274,7 @@ export default function Home() {
   }, [laptopResults]);
 
   return (
-    <div className="container mx-auto p-4 md:p-8 max-w-4xl">
+    <div className="container mx-auto p-4 md:p-8 max-w-8xl">
       <header className="text-center mb-10">
         <h1 className="text-3xl md:text-5xl font-bold text-gray-900">
           لپ‌تاپ‌گزین
@@ -266,7 +284,7 @@ export default function Home() {
         </p>
       </header>
 
-      <main className="relative bg-white p-6 md:p-8 rounded-2xl shadow-lg min-h-[500px]">
+      <main className="relative bg-white p-6 md:p-8 rounded-2xl shadow-lg min-h-[500px] pb-32">
         {currentStep === 1 && (
           <div className="step">
             <Step1Categories
@@ -349,6 +367,21 @@ export default function Home() {
           onReset={resetApp}
           onCompare={() => setCurrentStep(6)}
           laptopsToCompare={laptopsToCompare}
+          summaryText={(() => {
+            const selectedCats = (selections[1] || []).map((id: string) => {
+              const cat = categories.find((c) => c.id === id);
+              return cat ? cat.fa_name : id;
+            });
+            const selectedPrograms = selections[2] || [];
+            let txt = "";
+            if (selectedCats.length > 0)
+              txt += `دسته‌ها: ${selectedCats.join("، ")}`;
+            if (selectedPrograms.length > 0)
+              txt +=
+                (txt ? " | " : "") +
+                `برنامه‌ها: ${selectedPrograms.join("، ")}`;
+            return txt || "انتخابی انجام نشده است";
+          })()}
         />
       </main>
 

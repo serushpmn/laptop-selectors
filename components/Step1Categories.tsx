@@ -31,7 +31,7 @@ const Step1Categories: React.FC<Step1CategoriesProps> = ({
     }
     if (items.length === 0) return null;
     return (
-      <ul className="list-disc pr-5 space-y-1 text-sm text-gray-600 mt-2 text-right w-full">
+      <ul className="list-disc pr-1 space-y-0 text-xs text-gray-500 mt-2 text-right w-full sm:text-sm">
         {items.map((t, idx) => (
           <li key={idx}>{t}</li>
         ))}
@@ -52,7 +52,7 @@ const Step1Categories: React.FC<Step1CategoriesProps> = ({
 
       <div
         id="category-cards"
-        className="grid grid-cols-2 md:grid-cols-3 gap-4"
+        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-1"
       >
         {categories.map((item) => {
           const isSelected = selectedCategories.includes(item.id);
@@ -72,11 +72,11 @@ const Step1Categories: React.FC<Step1CategoriesProps> = ({
                 style={{ pointerEvents: "none" }}
               />
               {item.icon && (
-                <div className="text-3xl md:text-4xl mb-1 select-none">
+                <div className="text-3xl md:text-6xl mb-1 select-none">
                   {item.icon}
                 </div>
               )}
-              <div className="font-semibold text-gray-800">{item.fa_name}</div>
+              <div className="font-semibold text-gray-800 ">{item.fa_name}</div>
               {renderDescList(item.desc)}
             </div>
           );

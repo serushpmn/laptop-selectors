@@ -29,7 +29,7 @@ const Step2Software: React.FC<Step2SoftwareProps> = ({
 
       <div
         id="software-cards"
-        className="flex flex-row gap-6 overflow-x-auto max-w-full px-2"
+        className="flex flex-col md:flex-row gap-6 overflow-x-auto max-w-full px-2 "
         style={{ direction: "rtl" }}
       >
         {Object.entries(programs).map(([catId, group]) => (
