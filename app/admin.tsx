@@ -116,6 +116,89 @@ function SimpleTable<T extends { id?: any }>(
   return (
     <div className="mb-10 bg-white rounded-xl shadow p-6">
       <h2 className="font-bold text-xl mb-4 text-gray-800">{title}</h2>
+      {/* Add section moved to top */}
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+        {addFields.map((field) => {
+          // For searchable select
+          const [search, setSearch] = React.useState("");
+          const [showDropdown, setShowDropdown] = React.useState(false);
+          let filteredOptions = field.options;
+          if (field.type === "select" && search.length >= 2) {
+            filteredOptions = field.options?.filter((opt: any) =>
+              (opt.name ?? opt)
+                .toString()
+                .toLowerCase()
+                .includes(search.toLowerCase())
+            );
+          }
+          return (
+            <span key={String(field.key)} className="relative">
+              {field.type === "select" ? (
+                <>
+                  <input
+                    className="h-8 rounded-md border border-input bg-background px-2 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring min-w-[120px]"
+                    placeholder={field.label + " (جستجو...)"}
+                    value={
+                      search.length > 0
+                        ? search
+                        : (addRow[field.key] as any) ?? ""
+                    }
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      setShowDropdown(true);
+                    }}
+                    onFocus={() => setShowDropdown(true)}
+                  />
+                  {showDropdown && search.length >= 2 && (
+                    <div className="absolute z-10 bg-white border rounded shadow w-full max-h-40 overflow-auto text-xs mt-1">
+                      {filteredOptions?.length ? (
+                        filteredOptions.map((opt: any) => (
+                          <div
+                            key={String(opt.id ?? opt)}
+                            className="px-2 py-1 hover:bg-gray-100 cursor-pointer"
+                            onMouseDown={() => {
+                              setAddRow((r) => ({
+                                ...r,
+                                [field.key]: opt.id ?? opt,
+                              }));
+                              setSearch("");
+                              setShowDropdown(false);
+                            }}
+                          >
+                            {String(opt.name ?? opt)}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-2 py-1 text-gray-400">یافت نشد</div>
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <input
+                  className="h-8 rounded-md border border-input bg-background px-2 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  type={field.type || "text"}
+                  placeholder={field.label}
+                  value={(addRow[field.key] as any) ?? ""}
+                  onChange={(e) =>
+                    setAddRow((r) => ({ ...r, [field.key]: e.target.value }))
+                  }
+                />
+              )}
+            </span>
+          );
+        })}
+        <button
+          className="h-10 px-6 rounded-lg bg-green-500 text-white text-sm font-semibold shadow hover:bg-green-600 transition"
+          onClick={() => {
+            onAdd(addRow);
+            setAddRow({});
+          }}
+        >
+          افزودن
+        </button>
+      </div>
+      {/* Search section below add section */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4 border-b pb-4">
         <div className="flex items-center gap-2 w-full md:w-auto">
           <div className="relative w-full md:w-64">
